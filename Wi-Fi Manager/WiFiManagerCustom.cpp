@@ -2,7 +2,7 @@
 
 WiFiManagerCustom::WiFiManagerCustom() {
 
-    apName = "ESP32-IoT";
+    apName = "ESP32-WIFI-MANAGER";
 
     lastReconnectAttempt = 0;
     lastLedBlink = 0;
