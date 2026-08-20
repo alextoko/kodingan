@@ -2,7 +2,7 @@
 
 WiFiManagerCustom::WiFiManagerCustom() {
 
-    apName = "ESP32-WIFI-MANAGER";
+    apName = "ESP32-IoT";
 
     lastReconnectAttempt = 0;
     lastLedBlink = 0;
@@ -10,16 +10,10 @@ WiFiManagerCustom::WiFiManagerCustom() {
     ledState = false;
 }
 
-
-// ======================================================
-// BEGIN
-// ======================================================
-
 void WiFiManagerCustom::begin(const char* apName) {
 
     this->apName = apName;
 
-    // LED WiFi
     pinMode(WIFI_LED_PIN, OUTPUT);
     digitalWrite(WIFI_LED_PIN, LOW);
 
@@ -32,10 +26,6 @@ void WiFiManagerCustom::begin(const char* apName) {
 
     Serial.println("Mencoba terhubung ke WiFi...");
 
-    // ==================================================
-    // AUTO CONNECT
-    // ==================================================
-
     if (!wm.autoConnect(this->apName)) {
 
         Serial.println("Gagal terhubung ke WiFi.");
@@ -44,10 +34,6 @@ void WiFiManagerCustom::begin(const char* apName) {
         delay(3000);
         ESP.restart();
     }
-
-    // ==================================================
-    // WIFI BERHASIL TERHUBUNG
-    // ==================================================
 
     digitalWrite(WIFI_LED_PIN, HIGH);
     ledState = true;
@@ -70,24 +56,13 @@ void WiFiManagerCustom::begin(const char* apName) {
     Serial.println("==============================");
 }
 
-
-// ======================================================
-// LOOP
-// ======================================================
-
 void WiFiManagerCustom::loop() {
 
-    // Update indikator LED
     updateLED();
 
-    // Jika WiFi masih terhubung
     if (WiFi.status() == WL_CONNECTED) {
         return;
     }
-
-    // ==================================================
-    // AUTO RECONNECT
-    // ==================================================
 
     unsigned long currentMillis = millis();
 
@@ -99,19 +74,9 @@ void WiFiManagerCustom::loop() {
     }
 }
 
-
-// ======================================================
-// INDIKATOR LED WIFI
-// ======================================================
-
 void WiFiManagerCustom::updateLED() {
 
     unsigned long currentMillis = millis();
-
-    // ==================================================
-    // WIFI TERHUBUNG
-    // LED MENYALA TERUS
-    // ==================================================
 
     if (WiFi.status() == WL_CONNECTED) {
 
@@ -121,11 +86,6 @@ void WiFiManagerCustom::updateLED() {
 
         return;
     }
-
-    // ==================================================
-    // WIFI TIDAK TERHUBUNG
-    // LED BERKEDIP
-    // ==================================================
 
     if (currentMillis - lastLedBlink >= LED_BLINK_INTERVAL) {
 
@@ -137,18 +97,12 @@ void WiFiManagerCustom::updateLED() {
     }
 }
 
-
-// ======================================================
-// RECONNECT
-// ======================================================
-
 void WiFiManagerCustom::reconnect() {
 
     Serial.println();
     Serial.println("WiFi terputus!");
     Serial.println("Mencoba reconnect...");
 
-    // Pastikan LED kembali ke kondisi berkedip
     lastLedBlink = millis();
 
     WiFi.disconnect();
@@ -156,13 +110,11 @@ void WiFiManagerCustom::reconnect() {
 
     unsigned long startAttempt = millis();
 
-    // Tunggu maksimal 5 detik
     while (
         WiFi.status() != WL_CONNECTED &&
         millis() - startAttempt < 5000
     ) {
 
-        // Tetap update LED selama reconnect
         updateLED();
 
         delay(100);
@@ -171,10 +123,6 @@ void WiFiManagerCustom::reconnect() {
     }
 
     Serial.println();
-
-    // ==================================================
-    // BERHASIL RECONNECT
-    // ==================================================
 
     if (WiFi.status() == WL_CONNECTED) {
 
@@ -195,10 +143,6 @@ void WiFiManagerCustom::reconnect() {
 
     }
 
-    // ==================================================
-    // GAGAL RECONNECT
-    // ==================================================
-
     else {
 
         Serial.println("Reconnect gagal.");
@@ -206,20 +150,10 @@ void WiFiManagerCustom::reconnect() {
     }
 }
 
-
-// ======================================================
-// STATUS CONNECTED
-// ======================================================
-
 bool WiFiManagerCustom::connected() {
 
     return WiFi.status() == WL_CONNECTED;
 }
-
-
-// ======================================================
-// GET IP
-// ======================================================
 
 String WiFiManagerCustom::getIP() {
 
@@ -230,11 +164,6 @@ String WiFiManagerCustom::getIP() {
     return "0.0.0.0";
 }
 
-
-// ======================================================
-// GET SSID
-// ======================================================
-
 String WiFiManagerCustom::getSSID() {
 
     if (WiFi.status() == WL_CONNECTED) {
@@ -243,11 +172,6 @@ String WiFiManagerCustom::getSSID() {
 
     return "";
 }
-
-
-// ======================================================
-// GET RSSI
-// ======================================================
 
 int WiFiManagerCustom::getRSSI() {
 

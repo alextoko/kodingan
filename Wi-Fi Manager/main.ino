@@ -9,14 +9,15 @@ void setup() {
 
     Serial.begin(115200);
 
-    wifi.begin("ESP32-MONITORING");
+    wifi.begin("ESP32-IoT");
     ota.begin();
+
 }
 
 void loop() {
 
-    wifi.loop();
-    ota.loop();
+    wifi.loop(); // library wifi
+    ota.loop();  // library ota
 
-    // Program utama ESP32
+    // Program utama ESP32 //
 }

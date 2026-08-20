@@ -9,7 +9,7 @@ class WiFiManagerCustom {
 public:
     WiFiManagerCustom();
 
-    void begin(const char* apName = "ESP32-WIFI-MANAGER");
+    void begin(const char* apName = "ESP32-IoT");
     void loop();
 
     bool connected();
