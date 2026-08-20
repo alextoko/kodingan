@@ -1,8 +1,26 @@
 #include "OTAManager.h"
 
+// ======================================================
+// KONFIGURASI OTA
+// ======================================================
+
+static const char* OTA_HOSTNAME = "MONITORING";
+static const char* OTA_PASSWORD = "123";
+
+
+// ======================================================
+// CONSTRUCTOR
+// ======================================================
+
 OTAManager::OTAManager() {
+
     otaStarted = false;
 }
+
+
+// ======================================================
+// BEGIN OTA
+// ======================================================
 
 void OTAManager::begin() {
 
@@ -11,26 +29,48 @@ void OTAManager::begin() {
 
         Serial.println();
         Serial.println("[OTA] WiFi belum terhubung.");
-        Serial.println("[OTA] OTA belum dimulai.");
-
+        Serial.println("[OTA] Menunggu WiFi...");
+        
         return;
     }
 
     setupOTA();
 }
 
+
+// ======================================================
+// SETUP OTA
+// ======================================================
+
 void OTAManager::setupOTA() {
 
+    // Jangan inisialisasi dua kali
     if (otaStarted) {
         return;
     }
 
-    // Nama ESP32 yang muncul di Arduino IDE
-    ArduinoOTA.setHostname("ESP32-MONITORING");
 
-    // ==============================
+    // ==================================================
+    // HOSTNAME
+    // ==================================================
+
+    ArduinoOTA.setHostname(OTA_HOSTNAME);
+
+
+    // ==================================================
+    // PASSWORD
+    // ==================================================
+
+    if (OTA_PASSWORD != nullptr && OTA_PASSWORD[0] != '\0') {
+
+        ArduinoOTA.setPassword(OTA_PASSWORD);
+
+    }
+
+
+    // ==================================================
     // OTA START
-    // ==============================
+    // ==================================================
 
     ArduinoOTA.onStart([]() {
 
@@ -41,9 +81,10 @@ void OTAManager::setupOTA() {
 
     });
 
-    // ==============================
+
+    // ==================================================
     // OTA END
-    // ==============================
+    // ==================================================
 
     ArduinoOTA.onEnd([]() {
 
@@ -55,14 +96,19 @@ void OTAManager::setupOTA() {
 
     });
 
-    // ==============================
+
+    // ==================================================
     // OTA PROGRESS
-    // ==============================
+    // ==================================================
 
     ArduinoOTA.onProgress([](
         unsigned int progress,
         unsigned int total
     ) {
+
+        if (total == 0) {
+            return;
+        }
 
         unsigned int percent =
             (progress * 100) / total;
@@ -71,11 +117,13 @@ void OTAManager::setupOTA() {
             "[OTA] Progress: %u%%\r",
             percent
         );
+
     });
 
-    // ==============================
+
+    // ==================================================
     // OTA ERROR
-    // ==============================
+    // ==================================================
 
     ArduinoOTA.onError([](ota_error_t error) {
 
@@ -84,38 +132,78 @@ void OTAManager::setupOTA() {
             error
         );
 
+
         switch (error) {
 
             case OTA_AUTH_ERROR:
-                Serial.println("Authentication Failed");
+
+                Serial.println(
+                    "Authentication Failed"
+                );
+
                 break;
+
 
             case OTA_BEGIN_ERROR:
-                Serial.println("Begin Failed");
+
+                Serial.println(
+                    "Begin Failed"
+                );
+
                 break;
+
 
             case OTA_CONNECT_ERROR:
-                Serial.println("Connect Failed");
+
+                Serial.println(
+                    "Connect Failed"
+                );
+
                 break;
+
 
             case OTA_RECEIVE_ERROR:
-                Serial.println("Receive Failed");
+
+                Serial.println(
+                    "Receive Failed"
+                );
+
                 break;
+
 
             case OTA_END_ERROR:
-                Serial.println("End Failed");
+
+                Serial.println(
+                    "End Failed"
+                );
+
                 break;
+
 
             default:
-                Serial.println("Unknown Error");
+
+                Serial.println(
+                    "Unknown Error"
+                );
+
                 break;
         }
+
     });
 
-    // Mulai OTA
+
+    // ==================================================
+    // MULAI OTA
+    // ==================================================
+
     ArduinoOTA.begin();
 
     otaStarted = true;
+
+
+    // ==================================================
+    // INFORMASI OTA
+    // ==================================================
 
     Serial.println();
     Serial.println("==============================");
@@ -123,32 +211,77 @@ void OTAManager::setupOTA() {
     Serial.println("==============================");
 
     Serial.print("[OTA] Hostname : ");
-    Serial.println("ESP32-MONITORING");
+    Serial.println(OTA_HOSTNAME);
 
     Serial.print("[OTA] IP       : ");
     Serial.println(WiFi.localIP());
 
+    Serial.print("[OTA] Password : ");
+
+    if (OTA_PASSWORD != nullptr &&
+        OTA_PASSWORD[0] != '\0') {
+
+        Serial.println("AKTIF");
+
+    } else {
+
+        Serial.println("TIDAK ADA");
+
+    }
+
     Serial.println("==============================");
 }
 
+
+// ======================================================
+// LOOP OTA
+// ======================================================
+
 void OTAManager::loop() {
 
-    // Jika OTA belum aktif
-    if (!otaStarted) {
+    // ==================================================
+    // WIFI BELUM TERHUBUNG
+    // ==================================================
 
-        // Coba aktifkan kembali jika WiFi sudah terhubung
-        if (WiFi.status() == WL_CONNECTED) {
-            setupOTA();
+    if (WiFi.status() != WL_CONNECTED) {
+
+        // Jika sebelumnya OTA aktif,
+        // hentikan layanan OTA.
+        if (otaStarted) {
+
+            ArduinoOTA.end();
+
+            otaStarted = false;
+
+            Serial.println();
+            Serial.println("[OTA] WiFi terputus.");
+            Serial.println("[OTA] Layanan OTA dihentikan.");
         }
 
         return;
     }
 
-    // Jika WiFi terputus
-    if (WiFi.status() != WL_CONNECTED) {
+
+    // ==================================================
+    // WIFI SUDAH TERHUBUNG,
+    // TAPI OTA BELUM AKTIF
+    // ==================================================
+
+    if (!otaStarted) {
+
+        Serial.println();
+        Serial.println("[OTA] WiFi kembali terhubung.");
+        Serial.println("[OTA] Mengaktifkan kembali OTA...");
+
+        setupOTA();
+
         return;
     }
 
-    // Menangani proses OTA
+
+    // ==================================================
+    // OTA AKTIF
+    // ==================================================
+
     ArduinoOTA.handle();
 }
