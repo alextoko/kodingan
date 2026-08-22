@@ -1,7 +1,7 @@
 #include "OTAManager.h"
 
-static const char* OTA_HOSTNAME = "heheh";
-static const char* OTA_PASSWORD = "123";
+static const char* OTA_HOSTNAME = "sistem-iot";
+static const char* OTA_PASSWORD = "085763";
 
 OTAManager::OTAManager()
 {
@@ -11,30 +11,36 @@ OTAManager::OTAManager()
 
 void OTAManager::begin()
 {
-    if (WiFi.status() == WL_CONNECTED)
+    const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
+
+    lastWiFiState = wifiConnected;
+
+    if (wifiConnected)
     {
-        lastWiFiState = true;
         setupOTA();
     }
 }
 
 void OTAManager::loop()
 {
-    bool wifiConnected =
-        (WiFi.status() == WL_CONNECTED);
+    const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
 
+    // WiFi has just connected.
     if (wifiConnected && !lastWiFiState)
     {
         lastWiFiState = true;
         setupOTA();
     }
 
+    // WiFi has just disconnected.
     if (!wifiConnected && lastWiFiState)
     {
         lastWiFiState = false;
         stopOTA();
     }
 
+    // Process OTA only while WiFi is actually connected
+    // and OTA has been initialized.
     if (wifiConnected && otaStarted)
     {
         ArduinoOTA.handle();
@@ -44,27 +50,29 @@ void OTAManager::loop()
 void OTAManager::setupOTA()
 {
     if (otaStarted)
+    {
         return;
+    }
 
     ArduinoOTA.setHostname(OTA_HOSTNAME);
     ArduinoOTA.setPassword(OTA_PASSWORD);
 
     ArduinoOTA.begin();
-
     otaStarted = true;
 }
 
 void OTAManager::stopOTA()
 {
     if (!otaStarted)
+    {
         return;
+    }
 
     ArduinoOTA.end();
-
     otaStarted = false;
 }
 
 bool OTAManager::active()
 {
-    return otaStarted;
+    return otaStarted && (WiFi.status() == WL_CONNECTED);
 }
