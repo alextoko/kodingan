@@ -1,34 +1,35 @@
-#include "WIFI_AP.h"
+#include "WiFi_AP.h"
 #include "OTA.h"
-#include "Time_NTP.h"   
+#include "Time_NTP.h"
+#include "relay_ctrl.h"
+#include "sinric_ctrl.h"
+#include "scheduler.h"
 
-unsigned long lastPrint = 0;  // ← WAJIB ADA
+bool sinricReady = false;
 
 void setup() {
   Serial.begin(115200);
   delay(100);
 
-  // Init WiFi
-  initWiFiManager();
+  initRelay();     // restore relay dari EEPROM (wrapper)
+  initWiFi();
 
-  // Init OTA & NTP hanya jika WiFi terhubung
   if (WiFi.status() == WL_CONNECTED) {
-    setupOTA();
-    initNTPTime();   // ← SEKARANG DIKENAL
+    initNTP();
+    initOTA();
+    initSinric();
+    sinricReady = true;
   }
 }
 
 void loop() {
-  wifiHandleStatus();
-  handleOTA();
+  wifiStatusLED();
 
-  // Tampilkan jam tiap 1 detik
-  if (millis() - lastPrint >= 1000) {
-    lastPrint = millis();
-
-    Serial.print("Jam     : ");
-    Serial.print(getTimeString());
-    Serial.print(" | Tanggal : ");
-    Serial.println(getDateString());
+  if (sinricReady) {
+    handleExclusiveTask(switchID);
+    handleSinric();
   }
+
+  handleOTA();
+  handleAutoOffAtMidnight(switchID);
 }

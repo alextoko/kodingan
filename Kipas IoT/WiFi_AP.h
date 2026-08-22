@@ -5,72 +5,27 @@
 #include <WiFi.h>
 #include <WiFiManager.h>
 
-/* ===== KONFIG ===== */
-#define WIFI_AP_NAME          "Kipas_IoT"
-#define WIFI_CONNECT_TIMEOUT  10          // detik (WiFiManager)
-#define WIFI_RETRY_INTERVAL   10000       // ms
-#define LED_STATUS            2
+#define LED_WIFI 2
 
-/* ===== STATE ===== */
-static unsigned long lastWifiCheck = 0;
-static bool wifiConnectedOnce = false;
-
-/* ===== INIT PIN ===== */
-inline void wifiSetupPins() {
-  pinMode(LED_STATUS, OUTPUT);
-  digitalWrite(LED_STATUS, LOW);
-}
-
-/* ===== CONNECT / PROVISION ===== */
-inline bool initWiFiManager() {
-  wifiSetupPins();
+inline void initWiFi() {
+  pinMode(LED_WIFI, OUTPUT);
+  digitalWrite(LED_WIFI, LOW);
 
   WiFiManager wm;
-  wm.setConnectTimeout(WIFI_CONNECT_TIMEOUT);
-
-  Serial.println("[WiFi] Checking saved WiFi / Starting portal if needed...");
-  bool ok = wm.autoConnect(WIFI_AP_NAME); // BLOCKING hanya saat provisioning
-
-  if (ok) {
-    Serial.println("[WiFi] Connected");
-    Serial.print("[WiFi] IP: ");
-    Serial.println(WiFi.localIP());
-
-    digitalWrite(LED_STATUS, HIGH); // LED ON = WiFi connected
-    wifiConnectedOnce = true;
-  } else {
-    // kondisi ini jarang terjadi (autoConnect biasanya blocking)
-    Serial.println("[WiFi] Portal active");
+  if (!wm.autoConnect("Kipas_IoT")) {
+    ESP.restart();
   }
-
-  return ok;
+  digitalWrite(LED_WIFI, HIGH);
 }
 
-/* ===== MONITOR STATUS (NON-BLOCKING) ===== */
-inline void wifiHandleStatus() {
-
+inline void wifiStatusLED() {
+  static uint32_t t = 0;
   if (WiFi.status() == WL_CONNECTED) {
-    // WiFi CONNECTED → LED NYALA
-    digitalWrite(LED_STATUS, HIGH);
-    return;
+    digitalWrite(LED_WIFI, HIGH);
+  } else if (millis() - t > 300) {
+    digitalWrite(LED_WIFI, !digitalRead(LED_WIFI));
+    t = millis();
   }
-
-  // WiFi TIDAK CONNECTED → LED KEDIP
-  digitalWrite(LED_STATUS, (millis() % 1000) < 500);
-
-  // Auto reconnect berkala (jika sebelumnya pernah connect)
-  if (wifiConnectedOnce &&
-      millis() - lastWifiCheck >= WIFI_RETRY_INTERVAL) {
-
-    Serial.println("[WiFi] Reconnecting...");
-    WiFi.reconnect();
-    lastWifiCheck = millis();
-  }
-}
-
-/* ===== HELPER ===== */
-inline bool isWiFiConnected() {
-  return WiFi.status() == WL_CONNECTED;
 }
 
 #endif
