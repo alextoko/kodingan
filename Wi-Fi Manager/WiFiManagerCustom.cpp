@@ -6,9 +6,11 @@ WiFiManagerCustom::WiFiManagerCustom()
 
     lastReconnectAttempt = 0;
     lastLedBlink = 0;
+    reconnectStart = 0;
 
     ledState = false;
     wasConnected = false;
+    reconnectInProgress = false;
 }
 
 void WiFiManagerCustom::begin(const char* apName)
@@ -17,24 +19,27 @@ void WiFiManagerCustom::begin(const char* apName)
 
     pinMode(WIFI_LED_PIN, OUTPUT);
 
-    // Start in a known disconnected LED state.
     ledState = false;
     digitalWrite(WIFI_LED_PIN, LOW);
 
     lastReconnectAttempt = millis();
     lastLedBlink = millis();
+    reconnectStart = 0;
     wasConnected = false;
+    reconnectInProgress = false;
 
     WiFi.mode(WIFI_STA);
 
-    // Use WiFiManager only for the initial configuration/connection.
+    Serial.println("[WiFi] Starting WiFiManager...");
+
+    // WiFiManager is used only for the initial configuration/connection.
     if (!wm.autoConnect(this->apName))
     {
+        Serial.println("[WiFi] Initial connection/configuration failed. Restarting...");
         delay(3000);
         ESP.restart();
     }
 
-    // autoConnect() returned successfully.
     wasConnected = (WiFi.status() == WL_CONNECTED);
 
     if (wasConnected)
@@ -43,6 +48,11 @@ void WiFiManagerCustom::begin(const char* apName)
         digitalWrite(WIFI_LED_PIN, HIGH);
         lastReconnectAttempt = millis();
         lastLedBlink = millis();
+
+        Serial.print("[WiFi] Connected. IP: ");
+        Serial.println(WiFi.localIP());
+        Serial.print("[WiFi] SSID: ");
+        Serial.println(WiFi.SSID());
     }
 }
 
@@ -51,43 +61,68 @@ void WiFiManagerCustom::loop()
     const unsigned long currentMillis = millis();
     const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
 
-    // Handle connection state changes first.
+    // WiFi has connected or reconnected.
     if (wifiConnected)
     {
         if (!wasConnected)
         {
-            // WiFi has just reconnected.
             wasConnected = true;
+            reconnectInProgress = false;
+            reconnectStart = 0;
+
             ledState = true;
             digitalWrite(WIFI_LED_PIN, HIGH);
             lastLedBlink = currentMillis;
+
+            Serial.print("[WiFi] Reconnected. IP: ");
+            Serial.println(WiFi.localIP());
         }
 
-        // Keep the LED continuously ON while connected.
         digitalWrite(WIFI_LED_PIN, HIGH);
         ledState = true;
+        reconnectInProgress = false;
+        reconnectStart = 0;
         lastReconnectAttempt = currentMillis;
 
         return;
     }
 
-    // WiFi is disconnected.
+    // WiFi has just disconnected.
     if (wasConnected)
     {
-        // Enter disconnected state immediately.
         wasConnected = false;
+        reconnectInProgress = false;
+        reconnectStart = 0;
+
         ledState = false;
         digitalWrite(WIFI_LED_PIN, LOW);
         lastLedBlink = currentMillis;
+
+        Serial.println("[WiFi] Disconnected.");
     }
 
     // Blink LED while disconnected. This is non-blocking.
     updateLED();
 
-    // Try to reconnect periodically without blocking the main loop.
+    // If a reconnect is currently in progress, wait for either
+    // a successful connection or the non-blocking timeout.
+    if (reconnectInProgress)
+    {
+        if (currentMillis - reconnectStart >= RECONNECT_TIMEOUT)
+        {
+            reconnectInProgress = false;
+            reconnectStart = 0;
+            lastReconnectAttempt = currentMillis;
+
+            Serial.println("[WiFi] Reconnect attempt timed out.");
+        }
+
+        return;
+    }
+
+    // Start a new reconnect attempt only after the configured interval.
     if (currentMillis - lastReconnectAttempt >= RECONNECT_INTERVAL)
     {
-        lastReconnectAttempt = currentMillis;
         reconnect();
     }
 }
@@ -113,9 +148,21 @@ void WiFiManagerCustom::updateLED()
 
 void WiFiManagerCustom::reconnect()
 {
-    // Non-blocking reconnect.
-    // Do not wait in a while() loop here so the rest of the program
-    // can continue running normally while WiFi is unavailable.
+    const unsigned long currentMillis = millis();
+
+    // Prevent duplicate reconnect attempts while one is still running.
+    if (reconnectInProgress)
+    {
+        return;
+    }
+
+    reconnectInProgress = true;
+    reconnectStart = currentMillis;
+    lastReconnectAttempt = currentMillis;
+
+    Serial.println("[WiFi] Starting reconnect attempt...");
+
+    // Non-blocking reconnect using the previously stored WiFi credentials.
     WiFi.disconnect();
     WiFi.begin();
 }
