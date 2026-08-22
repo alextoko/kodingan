@@ -31,6 +31,7 @@ private:
     static const int WIFI_LED_PIN = 2;
 
     bool ledState;
+    bool wasConnected;
 
     void reconnect();
     void updateLED();
