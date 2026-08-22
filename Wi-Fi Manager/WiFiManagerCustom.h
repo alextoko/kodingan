@@ -24,14 +24,17 @@ private:
 
     unsigned long lastReconnectAttempt;
     unsigned long lastLedBlink;
+    unsigned long reconnectStart;
 
     static const unsigned long RECONNECT_INTERVAL = 10000;
+    static const unsigned long RECONNECT_TIMEOUT = 8000;
     static const unsigned long LED_BLINK_INTERVAL = 500;
 
     static const int WIFI_LED_PIN = 2;
 
     bool ledState;
     bool wasConnected;
+    bool reconnectInProgress;
 
     void reconnect();
     void updateLED();
