@@ -29,15 +29,18 @@ private:
     static const unsigned long RECONNECT_INTERVAL = 10000;
     static const unsigned long RECONNECT_TIMEOUT = 8000;
     static const unsigned long LED_BLINK_INTERVAL = 500;
+    static const uint8_t MAX_RECONNECT_ATTEMPTS = 5;
 
     static const int WIFI_LED_PIN = 2;
 
     bool ledState;
     bool wasConnected;
     bool reconnectInProgress;
+    uint8_t reconnectAttempts;
 
     void reconnect();
     void updateLED();
+    void startConfigPortal();
 };
 
 #endif
