@@ -339,33 +339,56 @@ void initServo()
 
 void updateServo(float temperature)
 {
-  if (isnan(temperature))
-  {
-    servoAngle = SERVO_MIN_ANGLE;
-  }
-  else if (temperature <= SERVO_TEMP_MIN)
-  {
-    servoAngle = SERVO_MIN_ANGLE;
-  }
-  else if (temperature >= SERVO_TEMP_MAX)
-  {
-    servoAngle = SERVO_MAX_ANGLE;
-  }
-  else
-  {
-    float angle =
-      SERVO_MIN_ANGLE +
-      ((temperature - SERVO_TEMP_MIN) *
-      (SERVO_MAX_ANGLE - SERVO_MIN_ANGLE) /
-      (SERVO_TEMP_MAX - SERVO_TEMP_MIN));
+    // ============================================================
+    // PROTEKSI SUHU TINGGI
+    // Jika suhu > 75°C, servo ke posisi 57°
+    // ============================================================
+    if (!isnan(temperature) && temperature > 75.0)
+    {
+      servoAngle = 57;
 
-    servoAngle = round(angle);
+      myServo.write(servoAngle);
+
+      Serial.println("[SERVO] Temperature > 75 C");
+      Serial.println("[SERVO] Position = 57 degree");
+
+      return;
+    }
+
+    // ============================================================
+    // SENSOR INVALID
+    // ============================================================
+    if (isnan(temperature))
+    {
+      servoAngle = SERVO_MIN_ANGLE;
+    }
+    else if (temperature <= SERVO_TEMP_MIN)
+    {
+      servoAngle = SERVO_MIN_ANGLE;
+    }
+    else if (temperature >= SERVO_TEMP_MAX)
+    {
+      servoAngle = SERVO_MAX_ANGLE;
+    }
+    else
+    {
+      float angle =
+        SERVO_MIN_ANGLE +
+        ((temperature - SERVO_TEMP_MIN) *
+        (SERVO_MAX_ANGLE - SERVO_MIN_ANGLE) /
+        (SERVO_TEMP_MAX - SERVO_TEMP_MIN));
+
+      servoAngle = round(angle);
+    }
+
+    servoAngle = constrain(
+      servoAngle,
+      SERVO_MIN_ANGLE,
+      SERVO_MAX_ANGLE
+    );
+
+    myServo.write(servoAngle);
   }
-
-  servoAngle = constrain(servoAngle, SERVO_MIN_ANGLE, SERVO_MAX_ANGLE);
-  myServo.write(servoAngle);
-}
-
 
 static int currentPWM = 0;
 static int targetPWM  = 0;
@@ -384,44 +407,67 @@ void initMotor()
 
 void updateMotorTarget(float tempRaw)
 {
-  if(isnan(tempRaw) || tempRaw <= 0 || tempRaw > TEMP_MAX_VALID)
-{
-  Serial.println("WARNING: Sensor invalid!");
-  pwmPercentActual = 60.0;
-  targetPWM = round((60.0 / 100.0) * PWM_MAX);
-  targetPWM = constrain(targetPWM, 0, PWM_MAX);
-  return;
-}
+    // ============================================================
+    // PROTEKSI SUHU TINGGI
+    // Jika suhu > 75°C, motor DC OFF
+    // ============================================================
+    if (!isnan(tempRaw) && tempRaw > 75.0)
+    {
+      pwmPercentActual = 0.0;
+      targetPWM = 0;
 
-  float t = tempRaw;
-  float tempMin = 30.0;
-  float tempMax = 65.0;
-  float pwmMin = 60.0;
-  float pwmMax = 100.0;
-  float pwmPercent;
+      Serial.println("WARNING: Temperature > 75 C");
+      Serial.println("[MOTOR] OFF - Over Temperature");
 
-  if(t <= tempMin)
-{
-    pwmPercent = pwmMin;
-}
-else if(t >= tempMax)
-{
-    pwmPercent = pwmMax;
-}
-else
-{
-    pwmPercent =
-      pwmMin +
-      ((t - tempMin) *
-      (pwmMax - pwmMin) /
-      (tempMax - tempMin));
-}
+      return;
+    }
 
-pwmPercentActual = pwmPercent;
+    // ============================================================
+    // SENSOR INVALID
+    // ============================================================
+    if(isnan(tempRaw) || tempRaw <= 0 || tempRaw > TEMP_MAX_VALID)
+    {
+      Serial.println("WARNING: Sensor invalid!");
 
-targetPWM = round((pwmPercent / 100.0) * PWM_MAX);
-targetPWM = constrain(targetPWM, 0, PWM_MAX);
-}
+      pwmPercentActual = 60.0;
+      targetPWM = round((60.0 / 100.0) * PWM_MAX);
+      targetPWM = constrain(targetPWM, 0, PWM_MAX);
+
+      return;
+    }
+
+    float t = tempRaw;
+
+    float tempMin = 30.0;
+    float tempMax = 65.0;
+
+    float pwmMin = 60.0;
+    float pwmMax = 100.0;
+
+    float pwmPercent;
+
+    if(t <= tempMin)
+    {
+      pwmPercent = pwmMin;
+    }
+    else if(t >= tempMax)
+    {
+      pwmPercent = pwmMax;
+    }
+    else
+    {
+      pwmPercent =
+        pwmMin +
+        ((t - tempMin) *
+        (pwmMax - pwmMin) /
+        (tempMax - tempMin));
+    }
+
+    pwmPercentActual = pwmPercent;
+
+    targetPWM = round((pwmPercent / 100.0) * PWM_MAX);
+    targetPWM = constrain(targetPWM, 0, PWM_MAX);
+  }
 
 void motorPWMUpdate()
 {
