@@ -9,6 +9,7 @@
 #include <math.h>
 #include <Preferences.h>
 #include "Servo.h"
+#include "WiFiManagerCustom.h"
 
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -31,10 +32,8 @@ Adafruit_SSD1306 display(
 Preferences prefs;
 float tempMax = -1000;
 float tempMin = 1000;
-#define LED_WIFI 2
-const char* WIFI_SSID = "MONITORING";
-const char* WIFI_PASS = "sistemiot";
-static bool wifiConnected = false;
+
+WiFiManagerCustom wifiManager;
 
 String getDateString()
 {
@@ -67,7 +66,6 @@ void loadMinMaxEEPROM()
         tempMin = prefs.getFloat("min", 1000);
         Serial.println("[EEPROM] MinMax Restored");
     }
-
     else
     {
         tempMax = -1000;
@@ -75,67 +73,6 @@ void loadMinMaxEEPROM()
         Serial.println("[EEPROM] New Day Reset");
     }
     prefs.end();
-}
-
-void initWiFi()
-{
-  pinMode(LED_WIFI, OUTPUT);
-  digitalWrite(LED_WIFI, LOW);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.print("[WiFi] Connecting");
-  unsigned long startAttempt = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startAttempt < 3000)
-  {
-    Serial.print(".");
-    delay(500);
-  }
-
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    wifiConnected = true;
-    digitalWrite(LED_WIFI, HIGH);
-    Serial.println();
-    Serial.println("[WiFi] Connected");
-    Serial.print("[WiFi] IP: ");
-    Serial.println(WiFi.localIP());
-  }
-
-  else
-  {
-    wifiConnected = false;
-    Serial.println();
-    Serial.println("[WiFi] Failed");
-  }
-}
-
-void handleWiFi()
-{
-  static unsigned long lastReconnect = 0;
-
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    wifiConnected = true;
-    digitalWrite(LED_WIFI, HIGH);
-  }
-  else
-  {
-    wifiConnected = false;
-    static uint32_t t = 0;
-
-    if (millis() - t > 300)
-    {
-      digitalWrite(LED_WIFI, !digitalRead(LED_WIFI));
-      t = millis();
-    }
-
-    if (millis() - lastReconnect > 3000)
-    {
-      Serial.println("[WiFi] Reconnecting...");
-      WiFi.begin(WIFI_SSID, WIFI_PASS);
-      lastReconnect = millis();
-    }
-  }
 }
 
 #define API_KEY       "AIzaSyAtebbp9XVTRpJROF4mo8FDM50l7vSRJQo"
@@ -151,7 +88,7 @@ int lastDay = -1;
 
 void initFirebase(float alarmDefault)
 {
-  if(WiFi.status() != WL_CONNECTED)
+  if(!wifiManager.connected())
   {
     return;
   }
@@ -238,8 +175,8 @@ void updateDeviceIP()
 {
   static String lastIP = "";
   if (!firebaseReady || !Firebase.ready()) return;
-  if (WiFi.status() != WL_CONNECTED) return;
-  String ip = WiFi.localIP().toString();
+  if (!wifiManager.connected()) return;
+  String ip = wifiManager.getIP();
   if (ip != lastIP)
   {
     Firebase.RTDB.setString(&fbdo, "/Device/ip", ip);
@@ -287,12 +224,12 @@ public:
 
     float temp = ((current - 4.0f) / 16.0f) * (_maxTemp - _minTemp) + _minTemp;
 
-      if(current < 4 || current > 20.5)
-  {
+    if(current < 4 || current > 20.5)
+    {
       return NAN;
-  }
+    }
 
-  return temp;
+    return temp;
   }
 
 private:
@@ -514,15 +451,15 @@ void updateAlarm(float temp, float alarmSet)
   const uint16_t PAUSE    = 200;
 
   if(!isnan(temp) && (temp < 0 || temp > 150))
-{
+  {
     alarmState = false;
     digitalWrite(ALARM_PIN, LOW);
     lastTime = millis();
     step = 0;
     return;
-}
+  }
 
-alarmState = (isnan(temp) || temp <= 0.5 || temp >= alarmSet);
+  alarmState = (isnan(temp) || temp <= 0.5 || temp >= alarmSet);
 
   if(!alarmState)
   {
@@ -597,7 +534,7 @@ float currentVal = 0;
 
 void sendToSheetIfChanged(float temperature)
 {
-  if(WiFi.status()!=WL_CONNECTED) return;
+  if(!wifiManager.connected()) return;
   static float lastTemp = -9999;
   static unsigned long lastSend = 0;
   unsigned long now = millis();
@@ -619,7 +556,11 @@ void setup(){
   initMotor();
   initServo();
   initAlarm();
-  initWiFi();
+
+  // WiFi dikelola sepenuhnya oleh WiFiManagerCustom.
+  // OTA sengaja tidak digunakan di v13.ino.
+  wifiManager.begin("ESP32-IoT");
+
   configTime(0, 0, "pool.ntp.org", "time.nist.gov");
   Serial.println("NTP started...");
   delay(2000);
@@ -699,18 +640,18 @@ void updateOLED()
 }
 
 void loop(){
-  handleWiFi();
-  if(WiFi.status() == WL_CONNECTED &&
-   !firebaseStarted)
-{
+  wifiManager.loop();
+
+  if(wifiManager.connected() && !firebaseStarted)
+  {
     initFirebase(alarmSet);
-}
+  }
 
   updateHeartbeat();
   struct tm timeinfo;
 
-if(getLocalTime(&timeinfo))
-{
+  if(getLocalTime(&timeinfo))
+  {
     if(timeinfo.tm_mday != lastDay)
     {
         lastDay = timeinfo.tm_mday;
@@ -719,7 +660,7 @@ if(getLocalTime(&timeinfo))
         saveMinMax();
         Serial.println("[SYSTEM] Daily MinMax Reset");
     }
-}
+  }
 
   updateDeviceIP();
   readAlarmSetpoint(alarmSet);
@@ -728,25 +669,25 @@ if(getLocalTime(&timeinfo))
     lastSensor = millis();
     tempCurrent = sensor.readAll( adcVal, voltageVal, currentVal);
 
-if(tempCurrent > 0 && tempCurrent < 100)
-{
-    if(tempMax == -1000)
+    if(tempCurrent > 0 && tempCurrent < 100)
+    {
+      if(tempMax == -1000)
         tempMax = tempCurrent;
 
-    if(tempMin == 1000)
+      if(tempMin == 1000)
         tempMin = tempCurrent;
 
-    if(tempCurrent > tempMax)
+      if(tempCurrent > tempMax)
         tempMax = tempCurrent;
 
-    if(tempCurrent < tempMin)
+      if(tempCurrent < tempMin)
         tempMin = tempCurrent;
+    }
   }
-}
 
-    tempSum += tempCurrent;
-    sampleCount++;
-    tempAvg = round1(tempSum / sampleCount);
+  tempSum += tempCurrent;
+  sampleCount++;
+  tempAvg = round1(tempSum / sampleCount);
 
   updateAlarm(tempCurrent, alarmSet);
   updateMotorTarget(tempCurrent);
@@ -769,9 +710,9 @@ if(tempCurrent > 0 && tempCurrent < 100)
 
     writeFloat("/Temperature/maximal", round1(tempMax));
     if(tempMin > 0)
-{
-    writeFloat("/Temperature/minimal", round1(tempMin));
-}
+    {
+      writeFloat("/Temperature/minimal", round1(tempMin));
+    }
 
     writeAlarmStatus(alarmState);
     writePWM(pwmNow);
@@ -783,15 +724,15 @@ if(tempCurrent > 0 && tempCurrent < 100)
   static int   lastPWMPrint  = -999;
   static int16_t lastADCPrint = -999;
 
-if(millis() - lastPrint >= PRINT_INTERVAL)
-{
+  if(millis() - lastPrint >= PRINT_INTERVAL)
+  {
     lastPrint = millis();
     bool tempChanged = abs(tempCurrent - lastTempPrint) >= 0.1;
     bool pwmChanged  = pwmNow != lastPWMPrint;
     bool adcChanged  = abs(adcVal - lastADCPrint) >= 5;
 
-      if(tempChanged || pwmChanged || adcChanged)
-  {
+    if(tempChanged || pwmChanged || adcChanged)
+    {
       Serial.println();
       Serial.println("==========================================");
       Serial.println("        MONITORING SUHU OLI PLTA");
@@ -887,7 +828,7 @@ if(millis() - lastPrint >= PRINT_INTERVAL)
       // WiFi
       Serial.print("WiFi        : ");
 
-      if (WiFi.status() == WL_CONNECTED)
+      if (wifiManager.connected())
       {
           Serial.println("CONNECTED");
       }
@@ -899,9 +840,9 @@ if(millis() - lastPrint >= PRINT_INTERVAL)
       // IP
       Serial.print("IP          : ");
 
-      if (WiFi.status() == WL_CONNECTED)
+      if (wifiManager.connected())
       {
-          Serial.println(WiFi.localIP());
+          Serial.println(wifiManager.getIP());
       }
       else
       {
@@ -913,6 +854,6 @@ if(millis() - lastPrint >= PRINT_INTERVAL)
       lastTempPrint = tempCurrent;
       lastPWMPrint  = pwmNow;
       lastADCPrint  = adcVal;
+    }
   }
-}
 }
