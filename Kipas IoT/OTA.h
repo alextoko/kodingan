@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <ArduinoOTA.h>
 
+
 /* =====================================================
    KONFIGURASI OTA
    ===================================================== */
@@ -16,42 +17,30 @@ static const char* OTA_HOSTNAME = "Kipas_IoT";
    STATUS OTA
    ===================================================== */
 
+// Callback OTA sudah didaftarkan?
+static bool otaCallbacksRegistered = false;
+
+// ArduinoOTA.begin() sudah pernah dijalankan?
+static bool otaStarted = false;
+
+// OTA siap digunakan pada koneksi WiFi saat ini?
 static bool otaReady = false;
 
 
 /* =====================================================
-   INIT OTA
-   Dipanggil saat WiFi pertama kali terhubung
-   atau setelah WiFi reconnect
+   REGISTER CALLBACK OTA
+   HANYA SEKALI SELAMA ESP32 HIDUP
    ===================================================== */
 
-inline void initOTA() {
+inline void registerOTACallbacks() {
 
-  // Jangan init OTA jika WiFi belum terhubung
-  if (WiFi.status() != WL_CONNECTED) {
-    otaReady = false;
+  if (otaCallbacksRegistered) {
     return;
   }
 
 
-  /* ===================================================
-     Jika OTA sudah aktif, tidak perlu init ulang
-     =================================================== */
-
-  if (otaReady) {
-    return;
-  }
-
-
-  Serial.println("[OTA] Initializing OTA...");
-
-
-  /* ===================================================
-     HOSTNAME
-     =================================================== */
-
-  ArduinoOTA.setHostname(
-    OTA_HOSTNAME
+  Serial.println(
+    "[OTA] Registering callbacks..."
   );
 
 
@@ -61,6 +50,7 @@ inline void initOTA() {
 
   ArduinoOTA.onStart([]() {
 
+    Serial.println();
     Serial.println(
       "[OTA] Update started"
     );
@@ -74,8 +64,9 @@ inline void initOTA() {
 
   ArduinoOTA.onEnd([]() {
 
+    Serial.println();
     Serial.println(
-      "\n[OTA] Update finished"
+      "[OTA] Update finished"
     );
 
   });
@@ -89,8 +80,14 @@ inline void initOTA() {
     [](unsigned int progress,
        unsigned int total) {
 
+      if (total == 0) {
+        return;
+      }
+
+
       unsigned int percent =
         (progress * 100U) / total;
+
 
       Serial.print(
         "\r[OTA] Progress: "
@@ -100,7 +97,9 @@ inline void initOTA() {
         percent
       );
 
-      Serial.print("%");
+      Serial.print(
+        "%"
+      );
     }
   );
 
@@ -120,7 +119,9 @@ inline void initOTA() {
         error
       );
 
-      Serial.print("]: ");
+      Serial.print(
+        "]: "
+      );
 
 
       if (error == OTA_AUTH_ERROR) {
@@ -130,6 +131,7 @@ inline void initOTA() {
         );
 
       }
+
       else if (error == OTA_BEGIN_ERROR) {
 
         Serial.println(
@@ -137,6 +139,7 @@ inline void initOTA() {
         );
 
       }
+
       else if (error == OTA_CONNECT_ERROR) {
 
         Serial.println(
@@ -144,6 +147,7 @@ inline void initOTA() {
         );
 
       }
+
       else if (error == OTA_RECEIVE_ERROR) {
 
         Serial.println(
@@ -151,6 +155,7 @@ inline void initOTA() {
         );
 
       }
+
       else if (error == OTA_END_ERROR) {
 
         Serial.println(
@@ -158,6 +163,7 @@ inline void initOTA() {
         );
 
       }
+
       else {
 
         Serial.println(
@@ -168,11 +174,89 @@ inline void initOTA() {
   );
 
 
+  otaCallbacksRegistered = true;
+
+
+  Serial.println(
+    "[OTA] Callbacks registered"
+  );
+}
+
+
+/* =====================================================
+   INIT OTA
+   Dipanggil saat:
+   - boot
+   - WiFi reconnect
+   ===================================================== */
+
+inline bool initOTA() {
+
   /* ===================================================
-     START OTA
+     WIFI HARUS TERHUBUNG
      =================================================== */
 
-  ArduinoOTA.begin();
+  if (WiFi.status() != WL_CONNECTED) {
+
+    otaReady = false;
+
+    return false;
+  }
+
+
+  Serial.println();
+  Serial.println(
+    "[OTA] Initializing OTA..."
+  );
+
+
+  /* ===================================================
+     SET HOSTNAME
+     =================================================== */
+
+  ArduinoOTA.setHostname(
+    OTA_HOSTNAME
+  );
+
+
+  /* ===================================================
+     REGISTER CALLBACK
+     
+     Hanya sekali.
+     =================================================== */
+
+  registerOTACallbacks();
+
+
+  /* ===================================================
+     ArduinoOTA.begin()
+     
+     Hanya sekali selama ESP32 hidup.
+     =================================================== */
+
+  if (!otaStarted) {
+
+    ArduinoOTA.begin();
+
+    otaStarted = true;
+
+
+    Serial.println(
+      "[OTA] ArduinoOTA started"
+    );
+
+  }
+  else {
+
+    Serial.println(
+      "[OTA] ArduinoOTA already started"
+    );
+  }
+
+
+  /* ===================================================
+     OTA SIAP
+     =================================================== */
 
   otaReady = true;
 
@@ -185,6 +269,7 @@ inline void initOTA() {
     OTA_HOSTNAME
   );
 
+
   Serial.print(
     "[OTA] IP Address: "
   );
@@ -192,18 +277,21 @@ inline void initOTA() {
   Serial.println(
     WiFi.localIP()
   );
+
+
+  return true;
 }
 
 
 /* =====================================================
    HANDLE OTA
-   Harus dipanggil terus di loop()
+   Harus dipanggil terus dari loop()
    ===================================================== */
 
 inline void handleOTA() {
 
   /* ===================================================
-     Jika WiFi terputus
+     WIFI PUTUS
      =================================================== */
 
   if (WiFi.status() != WL_CONNECTED) {
@@ -215,10 +303,8 @@ inline void handleOTA() {
 
 
   /* ===================================================
-     Jika WiFi sudah tersambung tetapi OTA belum siap
-     
-     Ini penting untuk kasus:
-     WiFi OFF → WiFi ON
+     WIFI SUDAH KEMBALI
+     TAPI OTA BELUM SIAP
      =================================================== */
 
   if (!otaReady) {
@@ -230,7 +316,19 @@ inline void handleOTA() {
 
 
   /* ===================================================
-     OTA HANDLE
+     OTA BELUM PERNAH DIMULAI
+     =================================================== */
+
+  if (!otaStarted) {
+
+    initOTA();
+
+    return;
+  }
+
+
+  /* ===================================================
+     PROSES OTA
      =================================================== */
 
   ArduinoOTA.handle();
@@ -238,12 +336,71 @@ inline void handleOTA() {
 
 
 /* =====================================================
-   CEK STATUS OTA
+   DIPANGGIL SAAT WIFI RECONNECT
+   ===================================================== */
+
+inline void reconnectOTA() {
+
+  if (WiFi.status() != WL_CONNECTED) {
+
+    otaReady = false;
+
+    return;
+  }
+
+
+  Serial.println(
+    "[OTA] WiFi restored"
+  );
+
+
+  /*
+     Tidak perlu mendaftarkan callback lagi.
+     Tidak perlu ArduinoOTA.begin() lagi.
+
+     Cukup tandai OTA siap digunakan kembali.
+  */
+
+  otaReady = true;
+
+
+  Serial.print(
+    "[OTA] OTA available at "
+  );
+
+  Serial.println(
+    WiFi.localIP()
+  );
+}
+
+
+/* =====================================================
+   STATUS OTA
    ===================================================== */
 
 inline bool isOTAReady() {
 
   return otaReady;
+}
+
+
+/* =====================================================
+   STATUS CALLBACK
+   ===================================================== */
+
+inline bool areOTACallbacksRegistered() {
+
+  return otaCallbacksRegistered;
+}
+
+
+/* =====================================================
+   STATUS OTA STARTED
+   ===================================================== */
+
+inline bool isOTAStarted() {
+
+  return otaStarted;
 }
 
 

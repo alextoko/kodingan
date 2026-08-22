@@ -26,15 +26,32 @@ bool lastWiFiConnected = false;
 
 void initNetworkServices() {
 
+  /* ===================================================
+     WIFI HARUS TERHUBUNG
+     =================================================== */
+
   if (WiFi.status() != WL_CONNECTED) {
+
+    Serial.println(
+      "[NETWORK] WiFi not connected"
+    );
+
     return;
   }
 
-  Serial.println();
-  Serial.println("[NETWORK] WiFi connected");
 
-  Serial.print("[NETWORK] IP Address: ");
-  Serial.println(WiFi.localIP());
+  Serial.println();
+  Serial.println(
+    "[NETWORK] WiFi connected"
+  );
+
+  Serial.print(
+    "[NETWORK] IP Address: "
+  );
+
+  Serial.println(
+    WiFi.localIP()
+  );
 
 
   /* ===================================================
@@ -48,20 +65,52 @@ void initNetworkServices() {
      OTA
      =================================================== */
 
-  initOTA();
+  bool otaOK =
+    initOTA();
+
+
+  if (otaOK) {
+
+    Serial.println(
+      "[NETWORK] OTA ready"
+    );
+
+  } else {
+
+    Serial.println(
+      "[NETWORK] OTA not ready"
+    );
+  }
 
 
   /* ===================================================
      SINRIC
      =================================================== */
 
-  initSinric();
+  bool sinricOK =
+    initSinric();
 
-  sinricReady = true;
+
+  if (sinricOK) {
+
+    sinricReady = true;
+
+    Serial.println(
+      "[NETWORK] Sinric ready"
+    );
+
+  } else {
+
+    sinricReady = false;
+
+    Serial.println(
+      "[NETWORK] Sinric not ready"
+    );
+  }
 
 
   Serial.println(
-    "[NETWORK] All network services ready"
+    "[NETWORK] Network services initialized"
   );
 }
 
@@ -72,14 +121,25 @@ void initNetworkServices() {
 
 void setup() {
 
-  Serial.begin(115200);
+  Serial.begin(
+    115200
+  );
 
   delay(100);
 
+
   Serial.println();
-  Serial.println("==============================");
-  Serial.println("       KIPAS IoT ESP32");
-  Serial.println("==============================");
+  Serial.println(
+    "=============================="
+  );
+
+  Serial.println(
+    "       KIPAS IoT ESP32"
+  );
+
+  Serial.println(
+    "=============================="
+  );
 
 
   /* ===================================================
@@ -100,13 +160,17 @@ void setup() {
      CEK WIFI
      =================================================== */
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (
+    WiFi.status() == WL_CONNECTED
+  ) {
 
     lastWiFiConnected = true;
 
     initNetworkServices();
 
-  } else {
+  }
+
+  else {
 
     lastWiFiConnected = false;
 
@@ -133,18 +197,20 @@ void loop() {
   /* ===================================================
      WIFI RECONNECT
      
-     Fungsi berasal dari WiFi_AP.h
+     Ditangani oleh WiFi_AP.h
      =================================================== */
 
   handleWiFiReconnect();
 
 
   /* ===================================================
-     DETEKSI WIFI CONNECT / DISCONNECT
+     BACA STATUS WIFI TERKINI
      =================================================== */
 
   bool currentWiFiConnected =
-    (WiFi.status() == WL_CONNECTED);
+    (
+      WiFi.status() == WL_CONNECTED
+    );
 
 
   /* ===================================================
@@ -156,9 +222,15 @@ void loop() {
     !currentWiFiConnected
   ) {
 
+    Serial.println();
     Serial.println(
       "[WIFI] Connection lost"
     );
+
+
+    /* ================================================
+       Sinric tidak dapat digunakan sementara
+       ================================================ */
 
     sinricReady = false;
   }
@@ -173,9 +245,19 @@ void loop() {
     currentWiFiConnected
   ) {
 
+    Serial.println();
     Serial.println(
       "[WIFI] Connection restored"
     );
+
+
+    /* ================================================
+       Inisialisasi ulang service jaringan
+
+       NTP  → konfigurasi ulang waktu
+       OTA  → aktif kembali
+       Sinric → tandai sync pending
+       ================================================ */
 
     initNetworkServices();
   }
@@ -190,14 +272,28 @@ void loop() {
 
 
   /* ===================================================
+     RELAY EXCLUSIVE TASK
+     
+     PENTING:
+     
+     Jangan masukkan ke dalam:
+     
+         if (sinricReady)
+     
+     Karena pending ON/OFF relay harus tetap diproses
+     walaupun Sinric sedang offline.
+     =================================================== */
+
+  handleExclusiveTask(
+    switchID
+  );
+
+
+  /* ===================================================
      SINRIC
      =================================================== */
 
   if (sinricReady) {
-
-    handleExclusiveTask(
-      switchID
-    );
 
     handleSinric();
   }
@@ -205,6 +301,17 @@ void loop() {
 
   /* ===================================================
      OTA
+     
+     handleOTA() tetap dipanggil terus.
+     
+     Jika WiFi putus:
+       → langsung return
+     
+     Jika WiFi kembali:
+       → initOTA()
+     
+     Jika OTA aktif:
+       → ArduinoOTA.handle()
      =================================================== */
 
   handleOTA();
@@ -212,6 +319,8 @@ void loop() {
 
   /* ===================================================
      SCHEDULER
+     
+     Scheduler tidak bergantung pada Sinric.
      =================================================== */
 
   handleAutoOffAtMidnight(

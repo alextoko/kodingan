@@ -2,6 +2,7 @@
 #define SINRIC_CTRL_H
 
 #include <Arduino.h>
+#include <WiFi.h>
 #include "SinricPro.h"
 #include "SinricProSwitch.h"
 #include "relay_ctrl.h"
@@ -11,11 +12,12 @@
    SINRIC PRO CONFIGURATION
    ===================================================== */
 
-// JANGAN hard-code credential yang sudah terekspos.
-// Ganti dengan APP_KEY dan APP_SECRET baru milik Anda.
+// WAJIB gunakan credential baru.
+// Jangan gunakan credential yang sebelumnya sudah
+// terekspos di GitHub.
 
-#define APP_KEY     "d43d4bd8-0241-4997-a46d-e3ffffb0eb5f"
-#define APP_SECRET  "5853eab2-8c69-497f-8eaa-fcd9e28d02b8-b97279cc-2f7c-4487-bc10-364eb25f49ac"
+#define APP_KEY     "GANTI_DENGAN_APP_KEY_BARU"
+#define APP_SECRET  "GANTI_DENGAN_APP_SECRET_BARU"
 
 
 /* =====================================================
@@ -30,7 +32,7 @@ static const char* switchID[3] = {
 
 
 /* =====================================================
-   KONFIGURASI JUMLAH SWITCH
+   JUMLAH SWITCH
    ===================================================== */
 
 static const uint8_t SINRIC_SWITCH_COUNT = 3;
@@ -40,7 +42,15 @@ static const uint8_t SINRIC_SWITCH_COUNT = 3;
    STATUS SINRIC
    ===================================================== */
 
-static bool sinricInitialized = false;
+// Callback sudah didaftarkan?
+static bool sinricCallbacksRegistered = false;
+
+// SinricPro.begin() sudah pernah dijalankan?
+static bool sinricStarted = false;
+
+// Menandai bahwa state relay perlu disinkronkan
+// setelah WiFi kembali.
+static bool sinricSyncPending = false;
 
 
 /* =====================================================
@@ -53,12 +63,22 @@ inline bool onPower(
 ) {
 
   Serial.println();
-  Serial.println("[SINRIC] Power command received");
+  Serial.println(
+    "[SINRIC] Power command received"
+  );
 
-  Serial.print("[SINRIC] Device ID: ");
-  Serial.println(deviceId);
+  Serial.print(
+    "[SINRIC] Device ID: "
+  );
 
-  Serial.print("[SINRIC] Requested state: ");
+  Serial.println(
+    deviceId
+  );
+
+  Serial.print(
+    "[SINRIC] Requested state: "
+  );
+
   Serial.println(
     state ? "ON" : "OFF"
   );
@@ -86,11 +106,11 @@ inline bool onPower(
 
 
       /* ================================================
-         Kirim perintah ke relay controller
+         ON:
+         masuk pending exclusive
 
-         requestExclusive() akan:
-         ON  -> pending 500 ms
-         OFF -> langsung OFF + cancel pending ON
+         OFF:
+         langsung OFF dan membatalkan pending ON
          ================================================ */
 
       requestExclusive(
@@ -123,7 +143,7 @@ inline bool onPower(
 
 inline void registerSinricCallbacks() {
 
-  if (sinricInitialized) {
+  if (sinricCallbacksRegistered) {
     return;
   }
 
@@ -148,7 +168,7 @@ inline void registerSinricCallbacks() {
   }
 
 
-  sinricInitialized = true;
+  sinricCallbacksRegistered = true;
 
 
   Serial.println(
@@ -158,54 +178,15 @@ inline void registerSinricCallbacks() {
 
 
 /* =====================================================
-   INIT SINRIC
-   Dipanggil saat boot dan WiFi reconnect
+   SINKRONISASI STATE RELAY KE SINRIC
    ===================================================== */
 
-inline void initSinric() {
-
-  /* ===================================================
-     Jangan init jika WiFi belum terhubung
-     =================================================== */
+inline void syncSinricRelayStates() {
 
   if (WiFi.status() != WL_CONNECTED) {
-
-    Serial.println(
-      "[SINRIC] WiFi not connected"
-    );
-
     return;
   }
 
-
-  Serial.println();
-  Serial.println(
-    "[SINRIC] Initializing SinricPro..."
-  );
-
-
-  /* ===================================================
-     CALLBACK HANYA SEKALI
-     =================================================== */
-
-  registerSinricCallbacks();
-
-
-  /* ===================================================
-     MULAI / HUBUNGKAN SINRIC
-     =================================================== */
-
-  SinricPro.begin(
-    APP_KEY,
-    APP_SECRET
-  );
-
-
-  /* ===================================================
-     SINKRONISASI STATE RELAY LOKAL
-     
-     Relay lokal adalah sumber state sebenarnya.
-     =================================================== */
 
   Serial.println(
     "[SINRIC] Synchronizing relay states..."
@@ -249,9 +230,112 @@ inline void initSinric() {
   }
 
 
+  sinricSyncPending = false;
+
+
   Serial.println(
-    "[SINRIC] SinricPro initialized"
+    "[SINRIC] State synchronization requested"
   );
+}
+
+
+/* =====================================================
+   INIT SINRIC
+   ===================================================== */
+
+inline bool initSinric() {
+
+  /* ===================================================
+     WIFI HARUS TERHUBUNG
+     =================================================== */
+
+  if (WiFi.status() != WL_CONNECTED) {
+
+    Serial.println(
+      "[SINRIC] WiFi not connected"
+    );
+
+    return false;
+  }
+
+
+  Serial.println();
+  Serial.println(
+    "[SINRIC] Initializing SinricPro..."
+  );
+
+
+  /* ===================================================
+     REGISTER CALLBACK
+     
+     Hanya dilakukan satu kali.
+     =================================================== */
+
+  registerSinricCallbacks();
+
+
+  /* ===================================================
+     SinricPro.begin() HANYA SEKALI
+     =================================================== */
+
+  if (!sinricStarted) {
+
+    SinricPro.begin(
+      APP_KEY,
+      APP_SECRET
+    );
+
+    sinricStarted = true;
+
+
+    Serial.println(
+      "[SINRIC] SinricPro started"
+    );
+
+  } else {
+
+    Serial.println(
+      "[SINRIC] SinricPro already started"
+    );
+  }
+
+
+  /* ===================================================
+     Tandai perlu sinkronisasi
+     =================================================== */
+
+  sinricSyncPending = true;
+
+
+  return true;
+}
+
+
+/* =====================================================
+   DIPANGGIL SETELAH WIFI RECONNECT
+   ===================================================== */
+
+inline void reconnectSinric() {
+
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+
+  Serial.println(
+    "[SINRIC] WiFi restored"
+  );
+
+
+  /*
+     Jangan panggil SinricPro.begin() lagi.
+
+     SinricPro sudah pernah di-start.
+     Biarkan handle() menjalankan komunikasi
+     dan proses reconnect.
+  */
+
+  sinricSyncPending = true;
 }
 
 
@@ -262,7 +346,7 @@ inline void initSinric() {
 inline void handleSinric() {
 
   /* ===================================================
-     Jangan jalankan Sinric ketika WiFi terputus
+     WIFI PUTUS
      =================================================== */
 
   if (WiFi.status() != WL_CONNECTED) {
@@ -271,10 +355,50 @@ inline void handleSinric() {
 
 
   /* ===================================================
-     Jalankan SinricPro
+     HANDLE SINRIC
      =================================================== */
 
-  SinricPro.handle();
+  if (sinricStarted) {
+
+    SinricPro.handle();
+  }
+
+
+  /* ===================================================
+     SINKRONISASI STATE
+
+     Dilakukan setelah SinricPro.handle() diberi
+     kesempatan untuk memproses koneksi.
+     =================================================== */
+
+  if (sinricSyncPending) {
+
+    static unsigned long lastSyncAttempt = 0;
+
+
+    /*
+       Jangan melakukan request terlalu sering.
+    */
+
+    if (
+      millis() - lastSyncAttempt >= 2000
+    ) {
+
+      lastSyncAttempt = millis();
+
+      syncSinricRelayStates();
+    }
+  }
+}
+
+
+/* =====================================================
+   STATUS SINRIC
+   ===================================================== */
+
+inline bool isSinricStarted() {
+
+  return sinricStarted;
 }
 
 
