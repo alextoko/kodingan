@@ -11,6 +11,7 @@ WiFiManagerCustom::WiFiManagerCustom()
     ledState = false;
     wasConnected = false;
     reconnectInProgress = false;
+    portalActive = false;
     reconnectAttempts = 0;
 }
 
@@ -28,41 +29,67 @@ void WiFiManagerCustom::begin(const char* apName)
     reconnectStart = 0;
     wasConnected = false;
     reconnectInProgress = false;
+    portalActive = false;
     reconnectAttempts = 0;
 
     WiFi.mode(WIFI_STA);
 
-    Serial.println("[WiFi] Starting WiFiManager...");
+    Serial.println("[WiFi] Starting WiFi Manager...");
+    Serial.println("[WiFi] Quick startup connection: trying stored WiFi for 8 seconds.");
 
-    // WiFiManager handles the initial connection and configuration.
-    // If the saved WiFi cannot be connected to, it can open its
-    // configuration portal according to WiFiManager's autoConnect flow.
-    if (!wm.autoConnect(this->apName))
+    // Try the previously stored WiFi credentials first.
+    // This avoids waiting for the normal WiFiManager autoConnect timeout.
+    if (tryStoredWiFi(STARTUP_CONNECT_TIMEOUT))
     {
-        Serial.println("[WiFi] Initial connection/configuration failed. Restarting...");
-        delay(3000);
-        ESP.restart();
-    }
-
-    wasConnected = (WiFi.status() == WL_CONNECTED);
-
-    if (wasConnected)
-    {
+        wasConnected = true;
         ledState = true;
         digitalWrite(WIFI_LED_PIN, HIGH);
         lastReconnectAttempt = millis();
         lastLedBlink = millis();
         reconnectAttempts = 0;
 
-        Serial.print("[WiFi] Connected. IP: ");
+        Serial.print("[WiFi] Connected to stored WiFi. IP: ");
         Serial.println(WiFi.localIP());
         Serial.print("[WiFi] SSID: ");
         Serial.println(WiFi.SSID());
+        return;
     }
+
+    // Stored WiFi was not available during the startup window.
+    // Open the configuration portal so the user can register a new WiFi.
+    Serial.println("[WiFi] Stored WiFi not available after 8 seconds.");
+    startConfigPortal();
+}
+
+bool WiFiManagerCustom::tryStoredWiFi(unsigned long timeoutMs)
+{
+    // No SSID/SSID scan is required here. WiFi.begin() without arguments
+    // asks the ESP32 WiFi stack to use the stored credentials.
+    WiFi.disconnect();
+    delay(100);
+    WiFi.begin();
+
+    const unsigned long start = millis();
+
+    while (WiFi.status() != WL_CONNECTED && millis() - start < timeoutMs)
+    {
+        updateLED();
+        delay(100);
+    }
+
+    return WiFi.status() == WL_CONNECTED;
 }
 
 void WiFiManagerCustom::loop()
 {
+    if (portalActive)
+    {
+        // startConfigPortal() is blocking until the portal exits.
+        // This guard prevents normal reconnect logic from running while
+        // the configuration portal is considered active.
+        return;
+    }
+
     const unsigned long currentMillis = millis();
     const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
 
@@ -125,8 +152,7 @@ void WiFiManagerCustom::loop()
             Serial.print(reconnectAttempts);
             Serial.println(" timed out.");
 
-            // After the fifth failed attempt, stop trying the old
-            // credentials and open the WiFiManager configuration portal.
+            // After the fifth failed attempt, open the configuration portal.
             if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)
             {
                 startConfigPortal();
@@ -166,7 +192,6 @@ void WiFiManagerCustom::reconnect()
 {
     const unsigned long currentMillis = millis();
 
-    // Prevent duplicate reconnect attempts while one is still running.
     if (reconnectInProgress)
     {
         return;
@@ -189,40 +214,48 @@ void WiFiManagerCustom::reconnect()
 
 void WiFiManagerCustom::startConfigPortal()
 {
-    Serial.println("[WiFi] Maximum reconnect attempts reached.");
     Serial.println("[WiFi] Opening WiFiManager configuration portal...");
 
     reconnectInProgress = false;
     reconnectStart = 0;
     reconnectAttempts = 0;
+    portalActive = true;
 
     ledState = false;
     digitalWrite(WIFI_LED_PIN, LOW);
 
-    // This is intentionally blocking while the user configures a new WiFi.
-    // It is only called after all automatic reconnect attempts have failed.
-    if (wm.startConfigPortal(this->apName))
-    {
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            wasConnected = true;
-            ledState = true;
-            digitalWrite(WIFI_LED_PIN, HIGH);
-            lastReconnectAttempt = millis();
-            lastLedBlink = millis();
+    // The old WiFi credentials are not erased here.
+    // If the user does not save a new network, the existing credentials
+    // remain available for future reconnect attempts.
+    wm.setConfigPortalTimeout(PORTAL_TIMEOUT / 1000UL);
 
-            Serial.print("[WiFi] New WiFi configured. IP: ");
-            Serial.println(WiFi.localIP());
-            Serial.print("[WiFi] SSID: ");
-            Serial.println(WiFi.SSID());
-        }
+    const bool portalResult = wm.startConfigPortal(this->apName);
+
+    portalActive = false;
+
+    if (portalResult && WiFi.status() == WL_CONNECTED)
+    {
+        wasConnected = true;
+        ledState = true;
+        digitalWrite(WIFI_LED_PIN, HIGH);
+        lastReconnectAttempt = millis();
+        lastLedBlink = millis();
+        reconnectAttempts = 0;
+
+        Serial.print("[WiFi] New WiFi configured. IP: ");
+        Serial.println(WiFi.localIP());
+        Serial.print("[WiFi] SSID: ");
+        Serial.println(WiFi.SSID());
     }
     else
     {
         wasConnected = false;
         lastReconnectAttempt = millis();
         lastLedBlink = millis();
+        reconnectAttempts = 0;
+
         Serial.println("[WiFi] Configuration portal closed without a successful connection.");
+        Serial.println("[WiFi] Stored credentials were not intentionally cleared.");
     }
 }
 
