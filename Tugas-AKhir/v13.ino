@@ -383,8 +383,20 @@ void updateMotorTarget(float tempRaw)
 void motorPWMUpdate()
 {
     currentPWM = constrain(targetPWM, 0, PWM_MAX);
+
+    if (currentPWM == 0)
+    {
+        // Driver motor aktif-low:
+        // HIGH = OFF
+        ledcWrite(MOTOR_PWM_PIN, PWM_MAX);
+        digitalWrite(MOTOR_PWM_PIN, HIGH);
+        currentRPM = 0;
+        return;
+    }
+
     uint8_t pwmOut = PWM_MAX - currentPWM;
     ledcWrite(MOTOR_PWM_PIN, pwmOut);
+
     currentRPM = (pwmPercentActual / 100.0) * 1430.0;
 }
 
