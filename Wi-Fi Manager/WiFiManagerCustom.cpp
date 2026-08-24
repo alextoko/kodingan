@@ -35,7 +35,7 @@ void WiFiManagerCustom::begin(const char* apName)
     WiFi.mode(WIFI_STA);
 
     Serial.println("[WiFi] Starting WiFi Manager...");
-    Serial.println("[WiFi] Quick startup connection: trying stored WiFi for 8 seconds.");
+    Serial.println("[WiFi] Quick startup connection: trying stored WiFi for 10 seconds.");
 
     // Try the previously stored WiFi credentials first.
     // This avoids waiting for the normal WiFiManager autoConnect timeout.
@@ -57,7 +57,7 @@ void WiFiManagerCustom::begin(const char* apName)
 
     // Stored WiFi was not available during the startup window.
     // Open the configuration portal so the user can register a new WiFi.
-    Serial.println("[WiFi] Stored WiFi not available after 8 seconds.");
+    Serial.println("[WiFi] Stored WiFi not available after 10 seconds.");
     startConfigPortal();
 }
 
