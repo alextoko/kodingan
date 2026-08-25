@@ -2,141 +2,303 @@
 
 WiFiManagerCustom::WiFiManagerCustom()
 {
-    apName = "ESP32-WIFI-MANAGER";
+    apName = "Kipas_IoT";
+
     lastReconnectAttempt = 0;
-    lastLedBlink = 0;
     reconnectStart = 0;
+    lastLedBlink = 0;
+
     ledState = false;
     wasConnected = false;
     reconnectInProgress = false;
-    portalActive = false;
+    portalIsActive = false;
     reconnectAttempts = 0;
+
+    currentState = State::STARTING;
 }
 
-void WiFiManagerCustom::begin(const char* apName)
+void WiFiManagerCustom::begin(const char* requestedApName)
 {
-    this->apName = apName;
+    apName = requestedApName;
+
     pinMode(WIFI_LED_PIN, OUTPUT);
     ledState = false;
     digitalWrite(WIFI_LED_PIN, LOW);
 
     lastReconnectAttempt = millis();
-    lastLedBlink = millis();
     reconnectStart = 0;
+    lastLedBlink = millis();
+
     wasConnected = false;
     reconnectInProgress = false;
-    portalActive = false;
+    portalIsActive = false;
     reconnectAttempts = 0;
+
+    setState(State::STARTING);
 
     WiFi.mode(WIFI_STA);
 
     Serial.println();
-    Serial.println("[WiFi] Starting WiFi Manager...");
-    Serial.println("[WiFi] Trying stored WiFi for 10 seconds.");
+    Serial.println("[WIFI] Starting WiFi Manager...");
+    Serial.println("[WIFI] Trying stored WiFi...");
+    Serial.print("[WIFI] Startup attempts: ");
+    Serial.println(STARTUP_CONNECT_ATTEMPTS);
 
     if (tryStoredWiFi(STARTUP_CONNECT_TIMEOUT))
     {
-        wasConnected = true;
-        ledState = true;
-        digitalWrite(WIFI_LED_PIN, HIGH);
-        lastReconnectAttempt = millis();
-        lastLedBlink = millis();
-        reconnectAttempts = 0;
-
-        Serial.print("[WiFi] Connected to stored WiFi. IP: ");
-        Serial.println(WiFi.localIP());
-        Serial.print("[WiFi] SSID: ");
-        Serial.println(WiFi.SSID());
+        setConnectedState();
         return;
     }
 
-    Serial.println("[WiFi] Stored WiFi unavailable after 10 seconds.");
+    Serial.println("[WIFI] Stored WiFi unavailable after startup retries.");
     startConfigPortal();
 }
 
 bool WiFiManagerCustom::tryStoredWiFi(unsigned long timeoutMs)
 {
-    WiFi.disconnect();
+    setState(State::CONNECTING);
+
+    for (uint8_t attempt = 1; attempt <= STARTUP_CONNECT_ATTEMPTS; ++attempt)
+    {
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            return true;
+        }
+
+        if (tryConnectionAttempt(timeoutMs, attempt, "startup"))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool WiFiManagerCustom::tryConnectionAttempt(
+    unsigned long timeoutMs,
+    uint8_t attempt,
+    const char* phase)
+{
+    Serial.print("[WIFI] ");
+    Serial.print(phase);
+    Serial.print(" connection attempt ");
+    Serial.print(attempt);
+
+    if (phase[0] == 's')
+    {
+        Serial.print("/");
+        Serial.print(STARTUP_CONNECT_ATTEMPTS);
+    }
+    else
+    {
+        Serial.print("/");
+        Serial.print(MAX_RECONNECT_ATTEMPTS);
+    }
+
+    Serial.println();
+
+    // Do not erase stored credentials. disconnect(false) only disconnects
+    // from the current AP and keeps the saved WiFi configuration.
+    WiFi.disconnect(false, false);
     delay(100);
     WiFi.begin();
 
     const unsigned long start = millis();
+    lastLedBlink = start;
 
-    while (WiFi.status() != WL_CONNECTED && millis() - start < timeoutMs)
+    while (WiFi.status() != WL_CONNECTED &&
+           millis() - start < timeoutMs)
     {
         updateLED();
-        delay(100);
+        delay(50);
     }
 
-    return WiFi.status() == WL_CONNECTED;
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        Serial.print("[WIFI] ");
+        Serial.print(phase);
+        Serial.println(" connection successful.");
+        return true;
+    }
+
+    Serial.print("[WIFI] ");
+    Serial.print(phase);
+    Serial.print(" connection attempt ");
+    Serial.print(attempt);
+    Serial.println(" timed out.");
+
+    return false;
 }
 
 void WiFiManagerCustom::loop()
 {
-    if (portalActive)
-        return;
-
-    const unsigned long currentMillis = millis();
+    const unsigned long now = millis();
     const bool wifiConnected = (WiFi.status() == WL_CONNECTED);
+
+    // The configuration portal is blocking by design. While it is active,
+    // do not alter its state from this loop.
+    if (portalIsActive)
+    {
+        return;
+    }
 
     if (wifiConnected)
     {
         if (!wasConnected)
         {
-            wasConnected = true;
+            Serial.println("[WIFI] Connection restored.");
+            setConnectedState();
+        }
+        else
+        {
+            // Keep the LED solid ON while connected.
+            ledState = true;
+            digitalWrite(WIFI_LED_PIN, HIGH);
             reconnectInProgress = false;
             reconnectStart = 0;
             reconnectAttempts = 0;
-            ledState = true;
-            digitalWrite(WIFI_LED_PIN, HIGH);
-            lastLedBlink = currentMillis;
-
-            Serial.print("[WiFi] Reconnected. IP: ");
-            Serial.println(WiFi.localIP());
+            setState(State::CONNECTED);
         }
 
-        digitalWrite(WIFI_LED_PIN, HIGH);
-        ledState = true;
-        reconnectInProgress = false;
-        reconnectStart = 0;
-        lastReconnectAttempt = currentMillis;
+        lastReconnectAttempt = now;
         return;
     }
 
+    // Detect a transition from connected -> disconnected.
     if (wasConnected)
     {
-        wasConnected = false;
-        reconnectInProgress = false;
-        reconnectStart = 0;
-        reconnectAttempts = 0;
-        ledState = false;
-        digitalWrite(WIFI_LED_PIN, LOW);
-        lastLedBlink = currentMillis;
-        Serial.println("[WiFi] Disconnected. Starting reconnect cycle.");
+        Serial.println("[WIFI] Connection lost.");
+        startReconnectCycle();
     }
 
     updateLED();
 
+    // An active reconnect attempt is allowed to run for RECONNECT_TIMEOUT.
     if (reconnectInProgress)
     {
-        if (currentMillis - reconnectStart >= RECONNECT_TIMEOUT)
+        if (now - reconnectStart >= RECONNECT_TIMEOUT)
         {
             reconnectInProgress = false;
             reconnectStart = 0;
-            lastReconnectAttempt = currentMillis;
-
-            Serial.print("[WiFi] Reconnect attempt ");
-            Serial.print(reconnectAttempts);
-            Serial.println(" timed out.");
+            lastReconnectAttempt = now;
 
             if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS)
+            {
+                Serial.println("[WIFI] Maximum reconnect attempts reached.");
                 startConfigPortal();
+            }
         }
+
         return;
     }
 
-    if (currentMillis - lastReconnectAttempt >= RECONNECT_INTERVAL)
+    // Keep the reconnect interval explicit so the ESP32 does not repeatedly
+    // call WiFi.begin() while the connection is unavailable.
+    if (now - lastReconnectAttempt >= RECONNECT_INTERVAL)
+    {
         reconnect();
+    }
+}
+
+void WiFiManagerCustom::startReconnectCycle()
+{
+    wasConnected = false;
+    reconnectInProgress = false;
+    reconnectStart = 0;
+    reconnectAttempts = 0;
+    lastReconnectAttempt = millis();
+    lastLedBlink = millis();
+
+    setState(State::RECONNECTING);
+
+    ledState = false;
+    digitalWrite(WIFI_LED_PIN, LOW);
+
+    Serial.println("[WIFI] Starting reconnect cycle.");
+}
+
+void WiFiManagerCustom::reconnect()
+{
+    if (reconnectInProgress || portalIsActive)
+    {
+        return;
+    }
+
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        setConnectedState();
+        return;
+    }
+
+    ++reconnectAttempts;
+    reconnectInProgress = true;
+    reconnectStart = millis();
+    lastReconnectAttempt = reconnectStart;
+
+    setState(State::RECONNECTING);
+
+    Serial.print("[WIFI] Starting reconnect attempt ");
+    Serial.print(reconnectAttempts);
+    Serial.print("/");
+    Serial.println(MAX_RECONNECT_ATTEMPTS);
+
+    // Keep stored credentials intact.
+    WiFi.disconnect(false, false);
+    delay(50);
+    WiFi.begin();
+}
+
+void WiFiManagerCustom::startConfigPortal()
+{
+    if (portalIsActive)
+    {
+        return;
+    }
+
+    Serial.println("[WIFI] Opening WiFiManager configuration portal...");
+    Serial.print("[WIFI] Portal timeout: ");
+    Serial.print(PORTAL_TIMEOUT / 1000UL);
+    Serial.println(" seconds");
+
+    reconnectInProgress = false;
+    reconnectStart = 0;
+    reconnectAttempts = 0;
+    portalIsActive = true;
+    wasConnected = false;
+
+    setState(State::PORTAL);
+
+    // Portal is intentionally not presented as a connected state.
+    ledState = false;
+    digitalWrite(WIFI_LED_PIN, LOW);
+
+    wm.setConfigPortalTimeout(PORTAL_TIMEOUT / 1000UL);
+
+    const bool portalResult = wm.startConfigPortal(apName);
+
+    portalIsActive = false;
+
+    if (portalResult && WiFi.status() == WL_CONNECTED)
+    {
+        Serial.println("[WIFI] WiFi configured successfully from portal.");
+        setConnectedState();
+        return;
+    }
+
+    // Timeout/cancel does not erase stored credentials. Return to the
+    // reconnect state instead of opening the portal again immediately.
+    wasConnected = false;
+    reconnectInProgress = false;
+    reconnectStart = 0;
+    reconnectAttempts = 0;
+    lastReconnectAttempt = millis();
+    lastLedBlink = millis();
+
+    setState(State::RECONNECTING);
+
+    Serial.println("[WIFI] Configuration portal closed without connection.");
+    Serial.println("[WIFI] Stored credentials were not intentionally cleared.");
+    Serial.println("[WIFI] Returning to automatic reconnect cycle.");
 }
 
 void WiFiManagerCustom::updateLED()
@@ -148,92 +310,106 @@ void WiFiManagerCustom::updateLED()
         return;
     }
 
-    const unsigned long currentMillis = millis();
-    if (currentMillis - lastLedBlink >= LED_BLINK_INTERVAL)
+    const unsigned long now = millis();
+
+    if (now - lastLedBlink >= LED_BLINK_INTERVAL)
     {
-        lastLedBlink = currentMillis;
+        lastLedBlink = now;
         ledState = !ledState;
         digitalWrite(WIFI_LED_PIN, ledState ? HIGH : LOW);
     }
 }
 
-void WiFiManagerCustom::reconnect()
+void WiFiManagerCustom::setState(State newState)
 {
-    if (reconnectInProgress)
+    if (currentState == newState)
+    {
         return;
+    }
 
-    reconnectAttempts++;
-    reconnectInProgress = true;
-    reconnectStart = millis();
-    lastReconnectAttempt = reconnectStart;
+    currentState = newState;
 
-    Serial.print("[WiFi] Starting reconnect attempt ");
-    Serial.print(reconnectAttempts);
-    Serial.print("/");
-    Serial.println(MAX_RECONNECT_ATTEMPTS);
-
-    WiFi.disconnect();
-    WiFi.begin();
+    Serial.print("[WIFI] State -> ");
+    Serial.println(stateName());
 }
 
-void WiFiManagerCustom::startConfigPortal()
+void WiFiManagerCustom::setConnectedState()
 {
-    Serial.println("[WiFi] Opening WiFiManager configuration portal...");
-
+    wasConnected = true;
     reconnectInProgress = false;
     reconnectStart = 0;
     reconnectAttempts = 0;
-    portalActive = true;
+    lastReconnectAttempt = millis();
+    lastLedBlink = millis();
 
-    ledState = false;
-    digitalWrite(WIFI_LED_PIN, LOW);
+    ledState = true;
+    digitalWrite(WIFI_LED_PIN, HIGH);
 
-    wm.setConfigPortalTimeout(PORTAL_TIMEOUT / 1000UL);
-    const bool portalResult = wm.startConfigPortal(this->apName);
+    setState(State::CONNECTED);
 
-    portalActive = false;
-
-    if (portalResult && WiFi.status() == WL_CONNECTED)
-    {
-        wasConnected = true;
-        ledState = true;
-        digitalWrite(WIFI_LED_PIN, HIGH);
-        lastReconnectAttempt = millis();
-        lastLedBlink = millis();
-        reconnectAttempts = 0;
-
-        Serial.print("[WiFi] New WiFi configured. IP: ");
-        Serial.println(WiFi.localIP());
-        Serial.print("[WiFi] SSID: ");
-        Serial.println(WiFi.SSID());
-    }
-    else
-    {
-        wasConnected = false;
-        lastReconnectAttempt = millis();
-        lastLedBlink = millis();
-        reconnectAttempts = 0;
-        Serial.println("[WiFi] Configuration portal closed without a successful connection.");
-        Serial.println("[WiFi] Stored credentials were not intentionally cleared.");
-    }
+    Serial.print("[WIFI] Connected. IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("[WIFI] SSID: ");
+    Serial.println(WiFi.SSID());
+    Serial.print("[WIFI] RSSI: ");
+    Serial.println(WiFi.RSSI());
 }
 
-bool WiFiManagerCustom::connected()
+bool WiFiManagerCustom::connected() const
 {
     return WiFi.status() == WL_CONNECTED;
 }
 
-String WiFiManagerCustom::getIP()
+bool WiFiManagerCustom::portalActive() const
+{
+    return portalIsActive;
+}
+
+bool WiFiManagerCustom::reconnecting() const
+{
+    return reconnectInProgress || currentState == State::RECONNECTING;
+}
+
+WiFiManagerCustom::State WiFiManagerCustom::state() const
+{
+    return currentState;
+}
+
+const char* WiFiManagerCustom::stateName() const
+{
+    switch (currentState)
+    {
+        case State::STARTING:
+            return "STARTING";
+
+        case State::CONNECTING:
+            return "CONNECTING";
+
+        case State::CONNECTED:
+            return "CONNECTED";
+
+        case State::RECONNECTING:
+            return "RECONNECTING";
+
+        case State::PORTAL:
+            return "PORTAL";
+
+        default:
+            return "UNKNOWN";
+    }
+}
+
+String WiFiManagerCustom::getIP() const
 {
     return connected() ? WiFi.localIP().toString() : "0.0.0.0";
 }
 
-String WiFiManagerCustom::getSSID()
+String WiFiManagerCustom::getSSID() const
 {
     return connected() ? WiFi.SSID() : "";
 }
 
-int WiFiManagerCustom::getRSSI()
+int WiFiManagerCustom::getRSSI() const
 {
     return connected() ? WiFi.RSSI() : 0;
 }
