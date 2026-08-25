@@ -1,9 +1,16 @@
-#include "WiFi_AP.h"
+#include "WiFiManagerCustom.h"
 #include "OTA.h"
 #include "Time_NTP.h"
 #include "relay_ctrl.h"
 #include "sinric_ctrl.h"
 #include "scheduler.h"
+
+
+/* =====================================================
+   WIFI MANAGER
+   ===================================================== */
+
+WiFiManagerCustom wifiManager;
 
 
 /* =====================================================
@@ -153,7 +160,7 @@ void setup() {
      WIFI
      =================================================== */
 
-  initWiFi();
+  wifiManager.begin("Kipas_IoT");
 
 
   /* ===================================================
@@ -161,7 +168,7 @@ void setup() {
      =================================================== */
 
   if (
-    WiFi.status() == WL_CONNECTED
+    wifiManager.connected()
   ) {
 
     lastWiFiConnected = true;
@@ -188,19 +195,16 @@ void setup() {
 void loop() {
 
   /* ===================================================
-     WIFI LED
+     WIFI MANAGER
+
+     WiFiManagerCustom sekarang menangani:
+       - connection state
+       - reconnect
+       - configuration portal
+       - WiFi status LED
      =================================================== */
 
-  wifiStatusLED();
-
-
-  /* ===================================================
-     WIFI RECONNECT
-     
-     Ditangani oleh WiFi_AP.h
-     =================================================== */
-
-  handleWiFiReconnect();
+  wifiManager.loop();
 
 
   /* ===================================================
@@ -208,9 +212,7 @@ void loop() {
      =================================================== */
 
   bool currentWiFiConnected =
-    (
-      WiFi.status() == WL_CONNECTED
-    );
+    wifiManager.connected();
 
 
   /* ===================================================
@@ -256,7 +258,7 @@ void loop() {
 
        NTP  → konfigurasi ulang waktu
        OTA  → aktif kembali
-       Sinric → tandai sync pending
+       Sinric → service jaringan dipulihkan
        ================================================ */
 
     initNetworkServices();
@@ -265,7 +267,8 @@ void loop() {
 
   /* ===================================================
      SIMPAN STATUS WIFI
-     =================================================== */
+     ===================================================
+  */
 
   lastWiFiConnected =
     currentWiFiConnected;
@@ -273,13 +276,13 @@ void loop() {
 
   /* ===================================================
      RELAY EXCLUSIVE TASK
-     
+
      PENTING:
-     
+
      Jangan masukkan ke dalam:
-     
+
          if (sinricReady)
-     
+
      Karena pending ON/OFF relay harus tetap diproses
      walaupun Sinric sedang offline.
      =================================================== */
@@ -301,15 +304,15 @@ void loop() {
 
   /* ===================================================
      OTA
-     
+
      handleOTA() tetap dipanggil terus.
-     
+
      Jika WiFi putus:
        → langsung return
-     
+
      Jika WiFi kembali:
        → initOTA()
-     
+
      Jika OTA aktif:
        → ArduinoOTA.handle()
      =================================================== */
@@ -319,7 +322,7 @@ void loop() {
 
   /* ===================================================
      SCHEDULER
-     
+
      Scheduler tidak bergantung pada Sinric.
      =================================================== */
 
