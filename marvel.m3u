@@ -1,152 +1,109 @@
-hasilnya
+#EXTM3U
 
-#EXTINF: -1 tvg-logo="https://upload.wikimedia.org/wikipedia/id/7/75/Ant-Man_poster.jpg?utm_source=id.wikipedia.org&utm_campaign=parser&utm_content=thumbnail_unscaled" group-title="MARVEL UNIVERSE", Ant-Man (2015)
-https://www.googleapis.com/drive/v3/files/1RDBfSynUO8Kg64Ny8g5mhTaBnFClZN-M?alt=media&key=AIzaSyBT8b7EQcZ1Ck41Nn1caie50a5l6cKj9nY
-
-api key=AIzaSyBT8b7EQcZ1Ck41Nn1caie50a5l6cKj9nY
-
-#######################################################################################################################################
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Ant-Man (2015)
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1RDBfSynUO8Kg64Ny8g5mhTaBnFClZN-M/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Ant-Man and the Wasp (2018)
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1GpbqyR5xtL6LpT1wGxxGhS0sQUlJjPFx/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Ant-Man and the Wasp: Quantumania
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1ZIqe2GYVQwTLwIMjEW7kNIUK08QJfJta/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Avengers: Age of Ultron (2015)
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1LRNidd3hitz7q_QPhhlRncpMOiNHT0Wo/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Avengers: Endgame
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1k1Si4WVpY9_0doMdlGosHUmsxr7hKw66/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Avengers: Infinity War
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1NkZPcwZayrmAsoSRNuMe1Jotg0Po-aLl/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", The Avengers
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1zGryaYGeT2c1cP1Qj_X0xFCJ76zVXrP2/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Black Panther
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1RhHpybzHMJiQb0qLdCy1t-ZppTVmHHjD/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Black Panther: Wakanda Forever
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1G3IEGtoEMO6AEGG6drCYLK_GOwWQvU9C/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Captain America: Brave New World
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1MFHsUa0saDijXWEBKelg-YQ1ca2T7Skh/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Captain America: Civil War
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1RjY4ggk_AUQo4FvscLfU3O82n6CssW_4/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Captain America: The First Avenger
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1-gK35coTzbAGuKt_bezcWBeIoSOjBZA-/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Captain America: The Winter Soldier
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1sIuxZvo-OrUubNMfo5SSr0pjSd9q5xa8/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Captain Marvel
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1Xn1XPEm6wk2P3UGba7QJzdVzuNssam8X/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", The Marvels
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1FX2wOwxM7AKeId1BOcZngZmmKOaT0KwK/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Doctor Strange
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1JYCEerWvXgPeiMH8prxyGh4toxIyGDWb/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Doctor Strange in the Multiverse of Madness
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/19GliEwzZiwWJn97YLgx-m0CyniyU0xc8/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Guardians Of The Galaxy
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1PuboY9Vd0bVmjoB1BuF6tGSu0ujLLjbz/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Guardians of the Galaxy Vol. 2
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1uq3QewNZeLRT6umM39LBxpUgIqcSdNNn/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Guardians of the Galaxy Vol. 3
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1uAdf5EEDiCn53Lf9xXqjwdvhUONo96L7/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Iron Man
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Iron_Man_(2008_film)_poster.jpg" group-title="MARVEL UNIVERSE", Iron Man (2008)
 https://drive.google.com/file/d/18rt8h55vk2UVvuiANANS8BHZ2DIpIvZl/view?usp=drive_link
 
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Iron Man 2
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/15HZhBeuTJxRFLuekx23JLsI5l4rNVoMy/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Iron Man 3
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/10jsRhMkHzAsMB_FOHTKNFkgixugqUBwt/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Spider-Man: No Way Home
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1WOohjtZNQoRcAoi273mE00dl7NRCKNCP/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Spider-Man: Far from Home
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1i5DpJNegt3uRXAUVpUIt27MoNTxf7PGL/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Spider-Man: Homecoming
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1nRMxXI6KOjAbS-TQXRf0zD_5B8S3ySS7/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Thor
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1VemrwelrJblTi5Nc-Lr9zg5bbTtZmZGo/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Thor: Love and Thunder
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1FkftJ6FXvtMvXEx9h4va7ZhAtJWLBmIG/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Thor: Ragnarok
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1fPYd3wmgvcDMPjfrccibYg35LpUPHc4A/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Thor: The Dark World
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/15vwWEs5AO6_bVxeSna-5eimCgk4OvOvJ/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Black Widow
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1s6O2eNmzbxveNy5bPUM4aqYP4kiQVUhp/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Deadpool & Wolverine
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/15JkdXM8M-baH7bWZ7wYgl8VVZJ97tYle/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Eternals
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1Su63_taJ9-x0ACwNb1KVXUuyfAQxzTeo/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Shang-Chi and the Legend of the Ten Rings
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
-https://drive.google.com/file/d/1RbfYDZ9SQmAC3OKSMapLk-wFFOG0cDvX/view?usp=drive_link
-
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", The Incredible Hulk
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/The_Incredible_Hulk_(film)_poster.jpg" group-title="MARVEL UNIVERSE", The Incredible Hulk (2008)
 https://drive.google.com/file/d/1wGZVxrY69lyChTFn9vX6BBdP6Rcb6yB5/view?usp=drive_link
 
-#EXTINF: -1 tvg-logo="" group-title="MARVEL UNIVERSE", Thunderbolts*
-https://www.googleapis.com/drive/v3/files/?alt=media&key=
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Iron_Man_2_poster.jpg" group-title="MARVEL UNIVERSE", Iron Man 2 (2010)
+https://drive.google.com/file/d/15HZhBeuTJxRFLuekx23JLsI5l4rNVoMy/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Thor_(film)_poster.jpg" group-title="MARVEL UNIVERSE", Thor (2011)
+https://drive.google.com/file/d/1VemrwelrJblTi5Nc-Lr9zg5bbTtZmZGo/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Captain_America_The_First_Avenger_poster.jpg" group-title="MARVEL UNIVERSE", Captain America: The First Avenger (2011)
+https://drive.google.com/file/d/1-gK35coTzbAGuKt_bezcWBeIoSOjBZA-/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/The_Avengers_(2012_film)_poster.jpg" group-title="MARVEL UNIVERSE", The Avengers (2012)
+https://drive.google.com/file/d/1zGryaYGeT2c1cP1Qj_X0xFCJ76zVXrP2/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Iron_Man_3_poster.jpg" group-title="MARVEL UNIVERSE", Iron Man 3 (2013)
+https://drive.google.com/file/d/10jsRhMkHzAsMB_FOHTKNFkgixugqUBwt/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Thor_The_Dark_World_poster.jpg" group-title="MARVEL UNIVERSE", Thor: The Dark World (2013)
+https://drive.google.com/file/d/15vwWEs5AO6_bVxeSna-5eimCgk4OvOvJ/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Captain_America_The_Winter_Soldier_poster.jpg" group-title="MARVEL UNIVERSE", Captain America: The Winter Soldier (2014)
+https://drive.google.com/file/d/1sIuxZvo-OrUubNMfo5SSr0pjSd9q5xa8/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Guardians_of_the_Galaxy_(film)_poster.jpg" group-title="MARVEL UNIVERSE", Guardians of the Galaxy (2014)
+https://drive.google.com/file/d/1PuboY9Vd0bVmjoB1BuF6tGSu0ujLLjbz/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Avengers_Age_of_Ultron_poster.jpg" group-title="MARVEL UNIVERSE", Avengers: Age of Ultron (2015)
+https://drive.google.com/file/d/1LRNidd3hitz7q_QPhhlRncpMOiNHT0Wo/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Ant-Man_poster.jpg" group-title="MARVEL UNIVERSE", Ant-Man (2015)
+https://drive.google.com/file/d/1RDBfSynUO8Kg64Ny8g5mhTaBnFClZN-M/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Captain_America_Civil_War_poster.jpg" group-title="MARVEL UNIVERSE", Captain America: Civil War (2016)
+https://drive.google.com/file/d/1RjY4ggk_AUQo4FvscLfU3O82n6CssW_4/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Doctor_Strange_poster.jpg" group-title="MARVEL UNIVERSE", Doctor Strange (2016)
+https://drive.google.com/file/d/1JYCEerWvXgPeiMH8prxyGh4toxIyGDWb/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Guardians_of_the_Galaxy_Vol._2_poster.jpg" group-title="MARVEL UNIVERSE", Guardians of the Galaxy Vol. 2 (2017)
+https://drive.google.com/file/d/1uq3QewNZeLRT6umM39LBxpUgIqcSdNNn/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Spider-Man_Homecoming_poster.jpg" group-title="MARVEL UNIVERSE", Spider-Man: Homecoming (2017)
+https://drive.google.com/file/d/1nRMxXI6KOjAbS-TQXRf0zD_5B8S3ySS7/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Thor_Ragnarok_poster.jpg" group-title="MARVEL UNIVERSE", Thor: Ragnarok (2017)
+https://drive.google.com/file/d/1fPYd3wmgvcDMPjfrccibYg35LpUPHc4A/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Black_Panther_(film)_poster.jpg" group-title="MARVEL UNIVERSE", Black Panther (2018)
+https://drive.google.com/file/d/1RhHpybzHMJiQb0qLdCy1t-ZppTVmHHjD/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Avengers_Infinity_War_poster.jpg" group-title="MARVEL UNIVERSE", Avengers: Infinity War (2018)
+https://drive.google.com/file/d/1NkZPcwZayrmAsoSRNuMe1Jotg0Po-aLl/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Ant-Man_and_the_Wasp_poster.jpg" group-title="MARVEL UNIVERSE", Ant-Man and the Wasp (2018)
+https://drive.google.com/file/d/1GpbqyR5xtL6LpT1wGxxGhS0sQUlJjPFx/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Captain_Marvel_(film)_poster.jpg" group-title="MARVEL UNIVERSE", Captain Marvel (2019)
+https://drive.google.com/file/d/1Xn1XPEm6wk2P3UGba7QJzdVzuNssam8X/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Avengers_Endgame_poster.jpg" group-title="MARVEL UNIVERSE", Avengers: Endgame (2019)
+https://drive.google.com/file/d/1k1Si4WVpY9_0doMdlGosHUmsxr7hKw66/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Spider-Man_Far_From_Home_poster.jpg" group-title="MARVEL UNIVERSE", Spider-Man: Far from Home (2019)
+https://drive.google.com/file/d/1i5DpJNegt3uRXAUVpUIt27MoNTxf7PGL/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Black_Widow_(2021_film)_poster.jpg" group-title="MARVEL UNIVERSE", Black Widow (2021)
+https://drive.google.com/file/d/1s6O2eNmzbxveNy5bPUM4aqYP4kiQVUhp/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Shang-Chi_and_the_Legend_of_the_Ten_Rings_poster.jpg" group-title="MARVEL UNIVERSE", Shang-Chi and the Legend of the Ten Rings (2021)
+https://drive.google.com/file/d/1RbfYDZ9SQmAC3OKSMapLk-wFFOG0cDvX/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Eternals_(film)_poster.jpg" group-title="MARVEL UNIVERSE", Eternals (2021)
+https://drive.google.com/file/d/1Su63_taJ9-x0ACwNb1KVXUuyfAQxzTeo/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Spider-Man_No_Way_Home_poster.jpg" group-title="MARVEL UNIVERSE", Spider-Man: No Way Home (2021)
+https://drive.google.com/file/d/1WOohjtZNQoRcAoi273mE00dl7NRCKNCP/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Doctor_Strange_in_the_Multiverse_of_Madness_poster.jpg" group-title="MARVEL UNIVERSE", Doctor Strange in the Multiverse of Madness (2022)
+https://drive.google.com/file/d/19GliEwzZiwWJn97YLgx-m0CyniyU0xc8/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Thor_Love_and_Thunder_poster.jpg" group-title="MARVEL UNIVERSE", Thor: Love and Thunder (2022)
+https://drive.google.com/file/d/1FkftJ6FXvtMvXEx9h4va7ZhAtJWLBmIG/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Black_Panther_Wakanda_Forever_poster.jpg" group-title="MARVEL UNIVERSE", Black Panther: Wakanda Forever (2022)
+https://drive.google.com/file/d/1G3IEGtoEMO6AEGG6drCYLK_GOwWQvU9C/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Ant-Man_and_the_Wasp_Quantumania_poster.jpg" group-title="MARVEL UNIVERSE", Ant-Man and the Wasp: Quantumania (2023)
+https://drive.google.com/file/d/1ZIqe2GYVQwTLwIMjEW7kNIUK08QJfJta/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Guardians_of_the_Galaxy_Vol._3_poster.jpg" group-title="MARVEL UNIVERSE", Guardians of the Galaxy Vol. 3 (2023)
+https://drive.google.com/file/d/1uAdf5EEDiCn53Lf9xXqjwdvhUONo96L7/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/The_Marvels_poster.jpg" group-title="MARVEL UNIVERSE", The Marvels (2023)
+https://drive.google.com/file/d/1FX2wOwxM7AKeId1BOcZngZmmKOaT0KwK/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Deadpool_%26_Wolverine_poster.jpg" group-title="MARVEL UNIVERSE", Deadpool & Wolverine (2024)
+https://drive.google.com/file/d/15JkdXM8M-baH7bWZ7wYgl8VVZJ97tYle/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Captain_America_Brave_New_World_poster.jpg" group-title="MARVEL UNIVERSE", Captain America: Brave New World (2025)
+https://drive.google.com/file/d/1MFHsUa0saDijXWEBKelg-YQ1ca2T7Skh/view?usp=drive_link
+
+#EXTINF:-1 tvg-logo="https://en.wikipedia.org/wiki/Special:Redirect/file/Thunderbolts_(film)_poster.jpg" group-title="MARVEL UNIVERSE", Thunderbolts* (2025)
 https://drive.google.com/file/d/1__L5ng4GH6SUgsF6Kfx0czjlYulgs9JE/view?usp=drive_link
